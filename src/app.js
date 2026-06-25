@@ -5,6 +5,7 @@ let sim = new Simulation(1200, 800);
 let isSimulating = false;
 let simSpeed = 1;
 let animationFrameId = null;
+let selectedCreature = null;
 
 // UI Elements
 const currentTickEl = document.getElementById('current-tick');
@@ -12,6 +13,8 @@ const totalPopulationEl = document.getElementById('total-population');
 const btnToggleSim = document.getElementById('btn-toggle-sim');
 const btnResetSim = document.getElementById('btn-reset-sim');
 const btnRunHeadless = document.getElementById('btn-run-headless');
+const btnDownloadState = document.getElementById('btn-download-state');
+const btnExportPr = document.getElementById('btn-export-pr');
 const speedSlider = document.getElementById('speed-slider');
 const speedValEl = document.getElementById('speed-val');
 
@@ -140,9 +143,82 @@ btnResetSim.addEventListener('click', () => {
   }
 });
 
-// Mock headless run or notify
+// Local Headless Run in Browser
 btnRunHeadless.addEventListener('click', () => {
-  alert('To execute a Headless Evolution generation and record it permanently in Git, run the following command in your terminal:\n\nnpm run simulate');
+  btnRunHeadless.disabled = true;
+  btnRunHeadless.textContent = 'Simulating 500 Ticks...';
+  
+  // Run asynchronously to let UI update
+  setTimeout(() => {
+    const startTime = performance.now();
+    for (let i = 0; i < 500; i++) {
+      sim.update();
+    }
+    const endTime = performance.now();
+    
+    updateStats();
+    drawWorld();
+    if (activeTab === 'tree') renderAncestryTree();
+    if (activeTab === 'history') renderCharts();
+    
+    btnRunHeadless.disabled = false;
+    btnRunHeadless.textContent = 'Run Headless CLI Step';
+    
+    alert(`Headless generation complete in ${Math.round(endTime - startTime)}ms! 500 ticks simulated.\n\nNote: In your local dev environment, run "npm run simulate" to commit this history permanently to Git.`);
+  }, 50);
+});
+
+// Download State JSON
+btnDownloadState.addEventListener('click', () => {
+  const stateStr = JSON.stringify(sim.saveState(), null, 2);
+  const blob = new Blob([stateStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `state-${sim.ticks}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+// Export Custom Species PR Schema
+btnExportPr.addEventListener('click', () => {
+  const hex = designerColor.value;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  
+  const customGenome = Genome.createRandom();
+  customGenome.diet = designerDiet.value;
+  customGenome.movement.maxSpeed = parseFloat(designerSpeed.value);
+  customGenome.appearance.color = [r, g, b];
+  
+  const prTemplate = {
+    speciesName: customGenome.name,
+    introducedAtTick: sim.ticks,
+    genome: customGenome
+  };
+  
+  const jsonStr = JSON.stringify(prTemplate, null, 2);
+  
+  // Copy to clipboard using modern API or fallback
+  navigator.clipboard.writeText(jsonStr)
+    .then(() => {
+      alert(`Species Pull Request JSON copied to clipboard!\n\nYou can use this JSON to open a Pull Request at Nubles/Aetheria-Evolving-Artificial-Ecosystem to submit your custom creature to the permanent Git ancestry record!`);
+    })
+    .catch(() => {
+      // Fallback
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = jsonStr;
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempTextArea);
+      alert(`Species Pull Request JSON copied to clipboard!`);
+    });
+  
+  console.log(prTemplate);
 });
 
 // Environmental events
@@ -294,8 +370,8 @@ function drawWorld() {
     // Set creature colors based on energy/health
     const opacity = c.health / 100;
     ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = selectedCreature && selectedCreature.id === c.id ? '#00e5ff' : '#ffffff';
+    ctx.lineWidth = selectedCreature && selectedCreature.id === c.id ? 2.5 : 1;
 
     // Draw Shape
     ctx.beginPath();
@@ -320,6 +396,21 @@ function drawWorld() {
     ctx.stroke();
 
     ctx.restore();
+
+    // Highlight selected creature
+    if (selectedCreature && selectedCreature.id === c.id) {
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, size + 8, 0, Math.PI * 2);
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Keep selected reference synced with real-time properties
+      selectedCreature = c;
+      updateInspectorDetails(c);
+    }
   });
 }
 
@@ -579,6 +670,83 @@ function renderAncestryTree() {
     text.setAttribute('font-family', 'Plus Jakarta Sans');
     text.textContent = `${node.name} (G${node.generation})`;
     svg.appendChild(text);
+  });
+}
+
+// Interactive Creature Selection Click Handler
+worldCanvas.addEventListener('click', (e) => {
+  const rect = worldCanvas.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const clickY = e.clientY - rect.top;
+  
+  // Convert screen coordinates back to simulation scale
+  const simX = (clickX / worldCanvas.width) * sim.width;
+  const simY = (clickY / worldCanvas.height) * sim.height;
+  
+  let nearestCreature = null;
+  let minDist = 40; // Max click radius threshold
+  
+  sim.creatures.forEach(c => {
+    const dist = sim.getDistance({ x: simX, y: simY }, c);
+    if (dist < minDist) {
+      minDist = dist;
+      nearestCreature = c;
+    }
+  });
+  
+  if (nearestCreature) {
+    selectedCreature = nearestCreature;
+    updateInspectorDetails(nearestCreature);
+    document.getElementById('inspector-card').classList.remove('hidden');
+    drawWorld();
+  }
+});
+
+// Close inspector card
+document.getElementById('btn-close-inspector').addEventListener('click', () => {
+  document.getElementById('inspector-card').classList.add('hidden');
+  selectedCreature = null;
+  drawWorld();
+});
+
+// Populate Selected Creature stats card
+function updateInspectorDetails(c) {
+  if (c.dead) {
+    document.getElementById('inspector-card').classList.add('hidden');
+    selectedCreature = null;
+    return;
+  }
+  
+  document.getElementById('inspect-name').textContent = c.genome.name;
+  document.getElementById('inspect-id').textContent = c.id;
+  document.getElementById('inspect-gen').textContent = c.generation;
+  document.getElementById('inspect-age').textContent = `${c.age} ticks`;
+  document.getElementById('inspect-energy').textContent = `${Math.round(c.energy)} / 200`;
+  document.getElementById('inspect-diet').textContent = c.genome.diet.toUpperCase();
+  document.getElementById('inspect-speed').textContent = `${c.genome.movement.maxSpeed.toFixed(1)} u/t`;
+  document.getElementById('inspect-aggr').textContent = `${Math.round(c.genome.aggression.predationWillingness * 100)}%`;
+  document.getElementById('inspect-temp').textContent = `${Math.round(c.genome.envPreferences.idealTemp * 100)}%`;
+
+  // Draw simple brain weight grid viz
+  const viz = document.getElementById('brain-matrix-viz');
+  viz.innerHTML = '';
+  
+  // Renders a small visual grid representing brain weights
+  const weights = c.genome.brain.weights.ih; // [hiddenNodes][inputNodes] matrix
+  weights.forEach(row => {
+    row.forEach(w => {
+      const cell = document.createElement('div');
+      cell.className = 'brain-cell';
+      
+      const weightVal = (w + 1) / 2; // 0 to 1
+      const r = Math.floor((1 - weightVal) * 200 + 40);
+      const g = Math.floor(weightVal * 200 + 40);
+      const b = 50;
+      
+      cell.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+      cell.title = `Weight: ${w.toFixed(2)}`;
+      viz.appendChild(cell);
+    });
   });
 }
 

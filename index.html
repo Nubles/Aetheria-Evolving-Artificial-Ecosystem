@@ -40,6 +40,7 @@
           <div class="control-grid">
             <button id="btn-toggle-sim" class="btn btn-primary">Start Live Simulation</button>
             <button id="btn-reset-sim" class="btn btn-danger">Reset Planet</button>
+            <button id="btn-download-state" class="btn btn-secondary">Download state.json</button>
           </div>
           <div class="control-group slider-group">
             <label for="speed-slider">Simulation Speed: <span id="speed-val">1x</span></label>
@@ -78,6 +79,7 @@
               <input type="color" id="designer-color" value="#00ff66">
             </div>
             <button id="btn-spawn-custom" class="btn btn-secondary w-full">Spawn Custom Organism</button>
+            <button id="btn-export-pr" class="btn btn-secondary w-full">Export PR JSON</button>
           </div>
         </div>
 
@@ -107,6 +109,27 @@
                   <div class="legend-item"><span class="color-dot herbi"></span> Herbivore</div>
                   <div class="legend-item"><span class="color-dot carni"></span> Carnivore</div>
                   <div class="legend-item"><span class="color-dot plant-food"></span> Vegetation</div>
+                </div>
+                <!-- Selected Creature Inspector Card (hidden by default) -->
+                <div id="inspector-card" class="inspector-card glass hidden">
+                  <div class="inspector-header">
+                    <h3>🧬 <span id="inspect-name">Organism</span></h3>
+                    <button id="btn-close-inspector" class="btn-close">&times;</button>
+                  </div>
+                  <div class="inspector-body">
+                    <div class="inspect-stat"><span class="label">ID:</span> <span id="inspect-id">-</span></div>
+                    <div class="inspect-stat"><span class="label">Gen:</span> <span id="inspect-gen">-</span></div>
+                    <div class="inspect-stat"><span class="label">Age:</span> <span id="inspect-age">-</span></div>
+                    <div class="inspect-stat"><span class="label">Energy:</span> <span id="inspect-energy">-</span></div>
+                    <div class="inspect-stat"><span class="label">Diet:</span> <span id="inspect-diet">-</span></div>
+                    <div class="inspect-stat"><span class="label">Max Speed:</span> <span id="inspect-speed">-</span></div>
+                    <div class="inspect-stat"><span class="label">Aggression:</span> <span id="inspect-aggr">-</span></div>
+                    <div class="inspect-stat"><span class="label">Preferred Temp:</span> <span id="inspect-temp">-</span></div>
+                    <div class="brain-view">
+                      <h4>🧠 Brain Wiring</h4>
+                      <div class="brain-matrix" id="brain-matrix-viz"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

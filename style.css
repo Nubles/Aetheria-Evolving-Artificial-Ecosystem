@@ -577,3 +577,94 @@ input[type="color"] {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* Floating Inspector Card */
+.inspector-card {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 280px;
+  max-height: calc(100% - 2rem);
+  overflow-y: auto;
+  padding: 1rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-color: rgba(0, 229, 255, 0.25);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.inspector-card.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+
+.inspector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.4rem;
+}
+
+.inspector-header h3 {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.btn-close:hover {
+  color: var(--danger);
+}
+
+.inspector-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.inspect-stat {
+  display: flex;
+  justify-content: space-between;
+}
+
+.inspect-stat .label {
+  color: var(--text-secondary);
+}
+
+.brain-view h4 {
+  color: var(--primary);
+  margin: 0.5rem 0 0.3rem 0;
+  font-size: 0.75rem;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 2px;
+}
+
+.brain-matrix {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  background-color: rgba(0,0,0,0.3);
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.brain-cell {
+  aspect-ratio: 1;
+  border-radius: 1px;
+}
+
