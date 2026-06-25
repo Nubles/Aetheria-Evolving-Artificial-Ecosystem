@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aetheria: An Evolving Artificial Planet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header with Glassmorphism -->
+    <header class="app-header">
+      <div class="logo-container">
+        <span class="pulse-indicator"></span>
+        <h1>AETHERIA</h1>
+        <span class="sub-logo">Evolving Artificial Planet</span>
+      </div>
+      <div class="status-panel">
+        <div class="stat-badge">
+          <span class="stat-label">Tick</span>
+          <span class="stat-value" id="current-tick">0</span>
+        </div>
+        <div class="stat-badge">
+          <span class="stat-label">Living Population</span>
+          <span class="stat-value" id="total-population">0</span>
+        </div>
+        <button id="btn-run-headless" class="btn btn-secondary">Run Headless CLI Step</button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="app-body">
+      <!-- Left Controls Panel -->
+      <section class="control-panel glass">
+        <div class="panel-section">
+          <h2>Simulation Control</h2>
+          <div class="control-grid">
+            <button id="btn-toggle-sim" class="btn btn-primary">Start Live Simulation</button>
+            <button id="btn-reset-sim" class="btn btn-danger">Reset Planet</button>
+          </div>
+          <div class="control-group slider-group">
+            <label for="speed-slider">Simulation Speed: <span id="speed-val">1x</span></label>
+            <input type="range" id="speed-slider" min="1" max="10" value="1">
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <h2>Environmental Forces</h2>
+          <p class="section-desc">Instantly alter the biomes and climate of Aetheria.</p>
+          <div class="events-grid">
+            <button id="btn-event-meteor" class="btn btn-event meteor">☄️ Meteor Impact</button>
+            <button id="btn-event-ice" class="btn btn-event ice">❄️ Ice Age</button>
+            <button id="btn-event-volcano" class="btn btn-event volcano">🌋 Volcanic Winter</button>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <h2>Organism Injector</h2>
+          <p class="section-desc">Design a new species and insert it into the planet.</p>
+          <div class="designer-form">
+            <div class="form-row">
+              <label for="designer-diet">Diet</label>
+              <select id="designer-diet">
+                <option value="photosynthetic">Photosynthetic (Plant-like)</option>
+                <option value="herbivore" selected>Herbivore (Grazer)</option>
+                <option value="carnivore">Carnivore (Hunter)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label for="designer-speed">Max Speed</label>
+              <input type="range" id="designer-speed" min="1.0" max="6.0" step="0.5" value="2.5">
+            </div>
+            <div class="form-row">
+              <label for="designer-color">Color</label>
+              <input type="color" id="designer-color" value="#00ff66">
+            </div>
+            <button id="btn-spawn-custom" class="btn btn-secondary w-full">Spawn Custom Organism</button>
+          </div>
+        </div>
+
+        <div class="panel-section info-box">
+          <h3>🧬 Git History Info</h3>
+          <p>This planet's ancestry records are updated and committed to Git on each headless simulation step.</p>
+        </div>
+      </section>
+
+      <!-- Center Viewer Area -->
+      <section class="viewer-area">
+        <div class="tabs-container">
+          <div class="tabs-header">
+            <button class="tab-btn active" data-tab="world">Planet Surface</button>
+            <button class="tab-btn" data-tab="tree">Species Ancestry</button>
+            <button class="tab-btn" data-tab="history">Historical Charts</button>
+            <button class="tab-btn" data-tab="migration">Migration Heatmap</button>
+          </div>
+          
+          <div class="tabs-content">
+            <!-- World View -->
+            <div class="tab-pane active" id="tab-world">
+              <div class="canvas-wrapper">
+                <canvas id="world-canvas"></canvas>
+                <div class="legend glass">
+                  <div class="legend-item"><span class="color-dot photo"></span> Photosynthetic</div>
+                  <div class="legend-item"><span class="color-dot herbi"></span> Herbivore</div>
+                  <div class="legend-item"><span class="color-dot carni"></span> Carnivore</div>
+                  <div class="legend-item"><span class="color-dot plant-food"></span> Vegetation</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Species Ancestry View -->
+            <div class="tab-pane" id="tab-tree">
+              <div class="tree-wrapper glass">
+                <div class="tree-controls">
+                  <h3>Ancestry and Speciation Map</h3>
+                  <button id="btn-refresh-tree" class="btn btn-small btn-secondary">Refresh Tree</button>
+                </div>
+                <div id="tree-container" class="svg-container">
+                  <svg id="ancestry-svg"></svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- History Charts View -->
+            <div class="tab-pane" id="tab-history">
+              <div class="charts-grid">
+                <div class="chart-card glass">
+                  <h3>Population Trends</h3>
+                  <canvas id="pop-chart"></canvas>
+                </div>
+                <div class="chart-card glass">
+                  <h3>Intelligence & Size Trends</h3>
+                  <canvas id="traits-chart"></canvas>
+                </div>
+                <div class="chart-card glass">
+                  <h3>Mass Extinction Timeline</h3>
+                  <div id="extinction-list" class="extinctions-container">
+                    <p class="placeholder-text">No mass extinctions recorded yet.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Migration View -->
+            <div class="tab-pane" id="tab-migration">
+              <div class="canvas-wrapper">
+                <canvas id="migration-canvas"></canvas>
+                <div class="heatmap-legend glass">
+                  <span>Low Density</span>
+                  <div class="gradient-bar"></div>
+                  <span>High Density</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>

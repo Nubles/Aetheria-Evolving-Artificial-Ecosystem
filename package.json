@@ -1,0 +1,16 @@
+{
+  "name": "busy-pasteur",
+  "version": "1.0.0",
+  "description": "An evolving artificial ecosystem simulation permanently recorded in Git",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "simulate": "node scripts/run-generation.js"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
