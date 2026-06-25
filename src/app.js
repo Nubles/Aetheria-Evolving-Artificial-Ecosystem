@@ -81,7 +81,7 @@ async function initEcosystem() {
   
   // Try loading from data/state.json (committed in git)
   try {
-    const response = await fetch('/data/state.json');
+    const response = await fetch('data/state.json');
     if (response.ok) {
       const data = await response.json();
       sim.loadState(data);
